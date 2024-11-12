@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metronex_Server</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(to right, #f0f4f8, #d9e7f0);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 20px;
+        }
+
+        .logo {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .logo img {
+            width: 80px;
+            transition: transform 0.3s ease;
+        }
+
+        .logo img:hover {
+            transform: scale(1.1);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            margin-top: 80px; 
+            width: 100%;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            color: #333333;
+        }
+
+        .container label {
+            font-size: 24px;
+            color: #444;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .input-area {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .input-area select,
+        .input-area input,
+        .input-area button {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 300px;
+            border: 2px solid #d1d8e2;
+            transition: all 0.3s ease;
+        }
+
+        .input-area input {
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .input-area button {
+            background-color: #ff7043;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .input-area input:focus {
+            border-color: #ff7043;
+            outline: none;
+        }
+
+        .input-area button:hover {
+            background-color: #ff5722;
+            transform: scale(1.05);
+        }
+
+        .terminal {
+            direction: rtl;
+            background-color: #f0f4f8;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            min-height: 300px;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+            max-height: 300px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .user-message {
+            color: black;
+    background: #ffd6d68a;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 70%;
+    align-self: flex-end;
+        }
+
+        .ai-message {
+            background-color: white;
+            color: black;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+            align-self: flex-start;
+        }
+
+        .label{
+            display:inline-flex;
+            font-family: "diwan";
+            padding-bottom:20px;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #ff7043;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+            z-index: 1000;
+        }
+
+        .refresh-btn:hover {
+            background-color: #ff5722;
+        }
+
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .main-content {
+                margin-top: 10px;
+            }
+
+            .logo img {
+                width: 60px;
+            }
+
+            .input-area select,
+            .input-area input,
+            .input-area button {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .terminal {
+                max-height: 250px;
+            }
+
+            .container {
+                padding: 20px;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Dr. Rashad Ahmed">
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <label class="label">A.I Generation 4</label>
+            <form method="POST">
+                <div class="input-area">
+                    <input type="text" placeholder="اكتب هنا..." id="userInput" name="command" required>
+                    <button type="submit">بحث</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="terminal">
+            <div class="message-container">
+                {% for msg in messages %}
+                    {% if msg['type'] == 'user' %}
+                        <div class="user-message">{{ msg['content'] }}</div>
+                    {% else %}
+                        <div class="ai-message">{{ msg['content'] }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="location.reload();">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <div style="color : #ff7043; text-align: center; font-size: 12px; margin-top: 20px;">Designed By M.D.A.A</div>
+
+</body>
+</html>
